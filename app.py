@@ -11,6 +11,7 @@ toolbar = DebugToolbarExtension(app)
 
 temp_memory=[]
 
+
 @app.route('/')
 def home_page():
   """ This is the survey home page """
@@ -19,20 +20,13 @@ def home_page():
 
 @app.route('/start_survey', methods = ['POST'])
 def start_survey():
-
+  """ Starts the survey and returns the first question """
   return redirect("/questions/0")
 
-# this is the global counter
-counter = 0
 
 @app.route('/questions/<int:question_num>')
 def show_question(question_num):
   """ Show current question """
-  global counter, temp_memory
-
-  if temp_memory is None:
-    # trying to access question page too soon
-    return redirect("/")
 
   if len(temp_memory) == len(survey.questions):
     """ If length of temp memory is as long as the number of survey questions
@@ -40,19 +34,17 @@ def show_question(question_num):
     """
     return render_template('survey_complete.html',temp_memory=temp_memory)  
 
-  if len(temp_memory) != question_num:
+  elif len(temp_memory) != question_num:
     return redirect(f"/questions/{len(temp_memory)}")
 
   else:
-    question = survey.questions[question_num]
-    return render_template('questions.html',question=question, question_num = question_num+1)
+    cur_question = survey.questions[question_num]
+    return render_template('questions.html',cur_question=cur_question, question_num = question_num+1)
 
 
 @app.route('/answer', methods=['POST'])
 def answer():
-  
-  global counter, temp_memory 
-
+  # global counter
   # get answer from survey question
   # don't want to keep appending values if we already answered everything
   if len(temp_memory) != len(survey.questions):
@@ -60,11 +52,8 @@ def answer():
     # add answer to temp memory 
     temp_memory.append(choice)
 
-  
-
-  if counter == len(survey.questions):
+  if len(temp_memory) == len(survey.questions):
     return render_template('survey_complete.html', temp_memory=temp_memory)
   
   else:
-    counter += 1
-    return redirect(f"/questions/{counter}")
+    return redirect(f"/questions/{len(temp_memory)}")
